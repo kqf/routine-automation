@@ -41,6 +41,7 @@ dependencies = [
     "telethon>=1.27.0",
     "tqdm>=4.65",
     "python-dotenv>=1.0",
+    "ffmpeg-python",
 ]
 
 [project.scripts]
