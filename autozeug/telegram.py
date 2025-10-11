@@ -3,14 +3,12 @@ from autozeug.video import extract_metadata
 from telethon.tl.types import DocumentAttributeVideo
 
 
-async def resolve_channel(client, channel_title: str):
+async def resolve_channel(client, title: str):
     async for dialog in client.iter_dialogs():
-        if (
-            dialog.is_channel
-            and dialog.name.strip().lower() == channel_title.strip().lower()
-        ):
+        matched = dialog.name.strip().lower() == title.strip().lower()
+        if dialog.is_channel and matched:
             return dialog.entity
-    raise ValueError(f"Channel '{channel_title}' not found")
+    raise ValueError(f"Channel '{title}' not found")
 
 
 def video_attributes(media: Path) -> dict:
