@@ -1,3 +1,4 @@
+from pathlib import Path
 import ffmpeg
 
 
@@ -5,8 +6,8 @@ def _to_stream(probe):
     return next(s for s in probe["streams"] if s["codec_type"] == "video")
 
 
-def get_video_metadata(file_path):
-    probe = ffmpeg.probe(file_path)
+def extract_metadata(video: Path):
+    probe = ffmpeg.probe(video)
     video_stream = _to_stream(probe)
 
     width = video_stream["width"]

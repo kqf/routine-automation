@@ -1,22 +1,21 @@
 from pathlib import Path
-from autozeug.video import get_video_metadata
+from autozeug.video import extract_metadata
 from telethon.tl.types import DocumentAttributeVideo
 
 
-async def resolve_channel(client, channel_title: str):
+async def resolve_channel(client, title: str):
     async for dialog in client.iter_dialogs():
-        if (
-            dialog.is_channel
-            and dialog.name.strip().lower() == channel_title.strip().lower()
-        ):
+        matched = dialog.name.strip().lower() == title.strip().lower()
+        if dialog.is_channel and matched:
             return dialog.entity
-    raise ValueError(f"Channel '{channel_title}' not found")
+    raise ValueError(f"Channel '{title}' not found")
 
 
-def additional_args(media: Path) -> dict:
+def video_attributes(media: Path) -> dict:
     if media.suffix.lower() != ".mp4":
         return {}
-    width, height, duration = get_video_metadata(media)
+
+    width, height, duration = extract_metadata(media)
     return {
         "attributes": [
             DocumentAttributeVideo(
@@ -34,5 +33,5 @@ async def upload_video(client, entity, media, caption):
         entity,
         media,
         caption=caption,
-        **additional_args(media),
+        **video_attributes(media),
     )
