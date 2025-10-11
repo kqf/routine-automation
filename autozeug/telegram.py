@@ -1,5 +1,5 @@
 from pathlib import Path
-import ffmpeg
+from autozeug.video import get_video_metadata
 from telethon.tl.types import DocumentAttributeVideo
 
 
@@ -11,18 +11,6 @@ async def resolve_channel(client, channel_title: str):
         ):
             return dialog.entity
     raise ValueError(f"Channel '{channel_title}' not found")
-
-
-def get_video_metadata(file_path):
-    probe = ffmpeg.probe(file_path)
-    video_stream = next(s for s in probe["streams"] if s["codec_type"] == "video")
-
-    width = video_stream["width"]
-    height = video_stream["height"]
-    # Duration is often in seconds as a string, e.g., '123.456'
-    duration = float(probe["format"]["duration"])
-
-    return width, height, duration
 
 
 def additional_args(media: Path) -> dict:
