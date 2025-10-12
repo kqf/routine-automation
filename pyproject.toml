@@ -45,7 +45,7 @@ dependencies = [
 ]
 
 [project.scripts]
-sanitize-filenames = "myostools.sanitizing:main"
+sanitize-filenames = "autozeug.sanitizing:main"
 
 [build-system]
 requires = ["setuptools>=61", "wheel"]
