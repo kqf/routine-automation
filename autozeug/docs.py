@@ -3,6 +3,19 @@ import click
 from markitdown import MarkItDown
 
 
+def convert(md_converter, path, ipath, directory):
+    try:
+        result = md_converter.convert(str(path))
+        if not result or not hasattr(result, "text_content"):
+            click.secho(f"Conversion failed for {path}", fg="red")
+            return
+
+        ipath.write_text(result.text_content, encoding="utf-8")
+        click.echo(f"{path.relative_to(directory)} -> {ipath.relative_to(directory)}")
+    except Exception as e:
+        click.secho(f"Error converting {path}: {e}", fg="red")
+
+
 @click.command()
 @click.argument(
     "directory", type=click.Path(exists=True, file_okay=False, path_type=Path)
@@ -24,25 +37,11 @@ def main(directory: Path, overwrite: bool):
         if path.suffix.lower() not in {".docx", ".doc"}:
             continue
 
-        output_path = path.with_suffix(".md")
-        if output_path.exists() and not overwrite:
-            click.echo(
-                f"Skipping {output_path.relative_to(directory)} (already exists)"
-            )
+        opath = path.with_suffix(".md")
+        if opath.exists() and not overwrite:
+            click.echo(f"Skipping {opath.relative_to(directory)} (exists)")
             continue
-
-        try:
-            result = md_converter.convert(str(path))
-            if result and hasattr(result, "text_content"):
-                output_path.write_text(result.text_content, encoding="utf-8")
-                click.echo(
-                    f"{path.relative_to(directory)} -> {output_path.relative_to(directory)}"
-                )
-            else:
-                click.secho(f"Conversion failed for {path}", fg="red")
-        except Exception as e:
-            click.secho(f"Error converting {path}: {e}", fg="red")
-
+        convert(md_converter, path, opath, directory)
     click.secho("\nConversion complete.", fg="green")
 
 
