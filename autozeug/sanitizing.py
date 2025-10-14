@@ -71,8 +71,9 @@ def main(directory: Path, dry_run: bool):
     rename_recursive(directory, dry_run)
     if dry_run:
         click.secho("\nDry-run complete. No files were renamed.", fg="yellow")
-    else:
-        click.secho("\nRenaming complete.", fg="green")
+        return
+
+    click.secho("\nRenaming complete.", fg="green")
 
 
 if __name__ == "__main__":
