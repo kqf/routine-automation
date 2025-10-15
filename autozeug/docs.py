@@ -3,17 +3,14 @@ import click
 from markitdown import MarkItDown
 
 
-def convert(md_converter, path, ipath, directory):
-    try:
-        result = md_converter.convert(str(path))
-        if not result or not hasattr(result, "text_content"):
-            click.secho(f"Conversion failed for {path}", fg="red")
-            return
+def convert(md_converter, path, ipath, folder):
+    result = md_converter.convert(str(path))
+    if not result or not hasattr(result, "text_content"):
+        click.secho(f"Conversion failed for {path}", fg="red")
+        return
 
-        ipath.write_text(result.text_content, encoding="utf-8")
-        click.echo(f"{path.relative_to(directory)} -> {ipath.relative_to(directory)}")
-    except Exception as e:
-        click.secho(f"Error converting {path}: {e}", fg="red")
+    ipath.write_text(result.text_content, encoding="utf-8")
+    click.echo(f"{path.relative_to(folder)} -> {ipath.relative_to(folder)}")
 
 
 @click.command()
