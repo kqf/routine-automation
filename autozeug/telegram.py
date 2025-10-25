@@ -8,6 +8,7 @@ from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
+from datetime import datetime
 
 
 async def resolve_channel(client, title: str):
