@@ -1,13 +1,13 @@
 import asyncio
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
-from datetime import datetime
 
 
 async def resolve_channel(client, title: str):
@@ -79,24 +79,22 @@ def download_posts(
     config: TelegramConfig,
     limit: int = 100,
 ) -> Path:
-    client = TelegramClient("downloader", config.api_id, config.api_hash)
-
     async def main():
-        client.start()
-        print(f"Fetching messages from {config.channel_name}...")
-        entity = await resolve_channel(client, config.channel_name)
-        messages = []
+        with TelegramClient("down", config.api_id, config.api_hash) as client:
+            print(f"Fetching messages from {config.channel_name}...")
+            entity = await resolve_channel(client, config.channel_name)
+            messages = []
 
-        async for message in client.iter_messages(entity, limit=limit):
-            if not builder.valid(message):
-                continue
-            messages.append(builder.build(message))
+            async for message in client.iter_messages(entity, limit=limit):
+                if not builder.valid(message):
+                    continue
+                messages.append(builder.build(message))
 
-        ofile = builder.ofile(messages)
-        with open(ofile, "w", encoding="utf-8") as f:
-            json.dump(messages[::-1], f, ensure_ascii=False, indent=4)
+            ofile = builder.ofile(messages)
+            with open(ofile, "w", encoding="utf-8") as f:
+                json.dump(messages[::-1], f, ensure_ascii=False, indent=4)
 
-        print(f"✅ Saved {len(messages)} text posts to '{ofile}'")
+            print(f"✅ Saved {len(messages)} text posts to '{ofile}'")
+        return ofile
 
-    asyncio.run(main())
-    return ofile
+    return asyncio.run(main())
