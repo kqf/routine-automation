@@ -7,6 +7,7 @@ from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
+from datetime import datetime
 
 
 async def resolve_channel(client, title: str):
@@ -50,14 +51,34 @@ class TelegramConfig:
     channel_name: str
 
 
-def download_posts(
-    config: TelegramConfig,
-    output_file: str = "15-09-2025.json",
-    limit: int = 100,
-):
-    if Path(output_file).exists():
-        return output_file
+@dataclass
+class Post:
+    date: str
+    text: str
 
+
+class PostBuilder:
+    def valid(self, message) -> bool:
+        return "youtube" in message.message
+
+    def build(self, message) -> Post:
+        return Post(
+            date=message.date.isoformat(),
+            text=message.message.strip(),
+        )
+
+    def ofile(self, posts: list[Post]) -> Path:
+        if not posts:
+            raise RuntimeError("No posts to save")
+        dt = datetime.fromisoformat(posts[0].date)
+        return Path(dt.strftime("%d-%m-%Y.json"))
+
+
+def download_posts(
+    builder: PostBuilder,
+    config: TelegramConfig,
+    limit: int = 100,
+) -> Path:
     client = TelegramClient("downloader", config.api_id, config.api_hash)
 
     async def main():
@@ -67,22 +88,15 @@ def download_posts(
         messages = []
 
         async for message in client.iter_messages(entity, limit=limit):
-            if message.message:
-                if "youtube" not in message.message:
-                    continue
+            if not builder.valid(message):
+                continue
+            messages.append(builder.build(message))
 
-                messages.append(
-                    {
-                        "date": message.date.isoformat(),
-                        "text": message.message.strip(),
-                        "course": Path(output_file).stem,
-                    }
-                )
-
-        with open(output_file, "w", encoding="utf-8") as f:
+        ofile = builder.ofile(messages)
+        with open(ofile, "w", encoding="utf-8") as f:
             json.dump(messages[::-1], f, ensure_ascii=False, indent=4)
 
-        print(f"✅ Saved {len(messages)} text posts to '{output_file}'")
+        print(f"✅ Saved {len(messages)} text posts to '{ofile}'")
 
     asyncio.run(main())
-    return output_file
+    return ofile
