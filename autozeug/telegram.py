@@ -10,6 +10,7 @@ from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
+from datetime import datetime
 
 
 async def resolve_channel(client, title: str):
@@ -85,6 +86,29 @@ def load_posts(filename: Path) -> list[Post]:
     with open(filename, "r", encoding="utf-8") as f:
         data = json.load(f)
     return [Post.from_dict(item) for item in data]  # type: ignore
+
+
+class PostBuilder:
+    def valid(self, message) -> bool:
+        return "youtube" in message.message
+
+    def build(self, message) -> Post:
+        return Post(
+            date=message.date.isoformat(),
+            text=message.message.strip(),
+        )
+
+    def ofile(self, posts: list[Post]) -> Path:
+        if not posts:
+            raise RuntimeError("No posts to save")
+        dt = datetime.fromisoformat(posts[0].date)
+        return Path(dt.strftime("%d-%m-%Y.json"))
+
+
+@dataclass
+class Post:
+    date: str
+    text: str
 
 
 class PostBuilder:
