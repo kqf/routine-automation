@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from dataclasses_json import dataclass_json
 from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
