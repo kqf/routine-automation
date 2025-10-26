@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from dataclasses_json import dataclass_json
+from environs import env
 from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
@@ -48,9 +49,60 @@ async def upload_video(client, entity, media, caption):
 
 @dataclass
 class TelegramConfig:
-    api_id: str
+    api_id: int
     api_hash: str
     channel_name: str
+    out_channel_name: str
+
+
+def load_config() -> TelegramConfig:
+    env.read_env()
+    return TelegramConfig(
+        api_id=env.int("TELEGRAM_API_ID"),
+        api_hash=env("TELEGRAM_API_HASH"),
+        channel_name=env("CHANNEL_NAME"),
+        out_channel_name=env("OUT_CHANNEL_NAME"),
+    )
+
+
+@dataclass
+@dataclass_json
+class Post:
+    date: str
+    text: str
+
+
+def save_posts(filename: Path, posts: list[Post]) -> None:
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(
+            [post.to_dict() for post in posts],  # type: ignore
+            f,
+            ensure_ascii=False,
+            indent=4,
+        )
+
+
+def load_posts(filename: Path) -> list[Post]:
+    with open(filename, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return [Post.from_dict(item) for item in data]  # type: ignore
+
+
+class PostBuilder:
+    def valid(self, message) -> bool:
+        return "youtube" in message.message
+
+    def build(self, message) -> Post:
+        return Post(
+            date=message.date.isoformat(),
+            text=message.message.strip(),
+        )
+
+    def ofile(self, posts: list[Post]) -> Path:
+        if not posts:
+            raise RuntimeError("No posts to save")
+        dt = datetime.fromisoformat(posts[0].date)
+        return Path(dt.strftime("%d-%m-%Y.json"))
 
 
 @dataclass
@@ -92,10 +144,10 @@ def download_posts(
                     continue
                 messages.append(builder.build(message))
 
+            # Restore the chronological order
+            messages = messages[::-1]
             ofile = builder.ofile(messages)
-            with open(ofile, "w", encoding="utf-8") as f:
-                json.dump(messages[::-1], f, ensure_ascii=False, indent=4)
-
+            save_posts(ofile, messages)
             print(f"✅ Saved {len(messages)} text posts to '{ofile}'")
         return ofile
 
