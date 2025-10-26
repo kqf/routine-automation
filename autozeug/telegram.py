@@ -9,6 +9,7 @@ from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
+from datetime import datetime
 
 
 async def resolve_channel(client, title: str):
@@ -53,26 +54,9 @@ class TelegramConfig:
 
 
 @dataclass
-@dataclass_json
 class Post:
     date: str
     text: str
-
-
-def save_posts(filename: Path, posts: list[Post]) -> None:
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(
-            [post.to_dict() for post in posts],  # type: ignore
-            f,
-            ensure_ascii=False,
-            indent=4,
-        )
-
-
-def load_posts(filename: Path) -> list[Post]:
-    with open(filename, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    return [Post.from_dict(item) for item in data]  # type: ignore
 
 
 class PostBuilder:
@@ -108,10 +92,10 @@ def download_posts(
                     continue
                 messages.append(builder.build(message))
 
-            # Restore the chronological order
-            messages = messages[::-1]
             ofile = builder.ofile(messages)
-            save_posts(ofile, messages)
+            with open(ofile, "w", encoding="utf-8") as f:
+                json.dump(messages[::-1], f, ensure_ascii=False, indent=4)
+
             print(f"✅ Saved {len(messages)} text posts to '{ofile}'")
         return ofile
 
