@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 from dataclasses_json import dataclass_json
+from environs import env
 from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
@@ -47,9 +48,20 @@ async def upload_video(client, entity, media, caption):
 
 @dataclass
 class TelegramConfig:
-    api_id: str
+    api_id: int
     api_hash: str
     channel_name: str
+    out_channel_name: str
+
+
+def load_config() -> TelegramConfig:
+    env.read_env()
+    return TelegramConfig(
+        api_id=env.int("TELEGRAM_API_ID"),
+        api_hash=env("TELEGRAM_API_HASH"),
+        channel_name=env("CHANNEL_NAME"),
+        out_channel_name=env("OUT_CHANNEL_NAME"),
+    )
 
 
 @dataclass
