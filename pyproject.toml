@@ -42,6 +42,7 @@ dependencies = [
     "tqdm>=4.65",
     "python-dotenv>=1.0",
     "ffmpeg-python",
+    "dataclasses-json",
 ]
 
 [project.scripts]
