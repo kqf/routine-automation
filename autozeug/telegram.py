@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Callable, Sequence
 
 from dataclasses_json import dataclass_json
 from environs import env
@@ -10,7 +11,6 @@ from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
-from datetime import datetime
 
 
 async def resolve_channel(client, title: str):
@@ -105,36 +105,13 @@ class PostBuilder:
         return Path(dt.strftime("%d-%m-%Y.json"))
 
 
-@dataclass
-class Post:
-    date: str
-    text: str
-
-
-class PostBuilder:
-    def valid(self, message) -> bool:
-        return "youtube" in message.message
-
-    def build(self, message) -> Post:
-        return Post(
-            date=message.date.isoformat(),
-            text=message.message.strip(),
-        )
-
-    def ofile(self, posts: list[Post]) -> Path:
-        if not posts:
-            raise RuntimeError("No posts to save")
-        dt = datetime.fromisoformat(posts[0].date)
-        return Path(dt.strftime("%d-%m-%Y.json"))
-
-
 def download_posts(
     builder: PostBuilder,
     config: TelegramConfig,
     limit: int = 100,
 ) -> Path:
     async def main():
-        with TelegramClient("down", config.api_id, config.api_hash) as client:
+        with TelegramClient("pull", config.api_id, config.api_hash) as client:
             print(f"Fetching messages from {config.channel_name}...")
             entity = await resolve_channel(client, config.channel_name)
             messages = []
@@ -152,3 +129,30 @@ def download_posts(
         return ofile
 
     return asyncio.run(main())
+
+
+@dataclass
+class OutPost:
+    valid: Callable
+    upload: Callable
+
+
+def upload_posts(
+    posts: Sequence[OutPost],
+    config: TelegramConfig,
+) -> None:
+    async def main():
+        with TelegramClient("push", config.api_id, config.api_hash) as client:
+            print(f"Uploading messages to {config.out_channel_name}...")
+            entity = await resolve_channel(client, config.out_channel_name)
+            for post in posts:
+                if not post.valid():
+                    continue
+
+                try:
+                    await post.upload(client, entity)
+                    print(f"✅ Uploaded: {post}")
+                except Exception as e:
+                    print(f"❌ Failed to upload {post}: {e}")
+
+    asyncio.run(main())
