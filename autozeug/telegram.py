@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Callable, Sequence
 
 from dataclasses_json import dataclass_json
 from environs import env
@@ -10,7 +11,6 @@ from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
-from datetime import datetime
 
 
 async def resolve_channel(client, title: str):
@@ -152,3 +152,30 @@ def download_posts(
         return ofile
 
     return asyncio.run(main())
+
+
+@dataclass
+class OutPost:
+    valid: Callable
+    upload: Callable
+
+
+def upload_posts(
+    posts: Sequence[OutPost],
+    config: TelegramConfig,
+) -> None:
+    async def main():
+        with TelegramClient("push", config.api_id, config.api_hash) as client:
+            print(f"Uploading messages to {config.out_channel_name}...")
+            entity = await resolve_channel(client, config.out_channel_name)
+            for post in posts:
+                if not post.valid():
+                    continue
+
+                try:
+                    await post.upload(client, entity)
+                    print(f"✅ Uploaded: {post}")
+                except Exception as e:
+                    print(f"❌ Failed to upload {post}: {e}")
+
+    asyncio.run(main())
