@@ -1,6 +1,8 @@
-import cv2
 from pathlib import Path
+
+import cv2
 import ffmpeg
+from yt_dlp import YoutubeDL
 
 
 def _to_stream(probe):
@@ -39,3 +41,17 @@ def video_exists_and_valid(video: Path) -> bool:
         return is_readable(video)
     except Exception:
         return False
+
+
+def download_from_youtube(video: Path, url: str):
+    video.parent.mkdir(parents=True, exist_ok=True)
+
+    ydl_opts = {
+        "format": "mp4[height=360]",  # same as -f "mp4[height=360]"
+        "outtmpl": str(video),  # same as -o <path>
+        "quiet": False,  # show progress (optional)
+        "noprogress": False,
+    }
+
+    with YoutubeDL(ydl_opts) as ydl:  # type: ignore
+        ydl.download([url])
