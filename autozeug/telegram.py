@@ -105,7 +105,7 @@ class PostBuilder:
         return Path(dt.strftime("%d-%m-%Y.json"))
 
 
-def download_posts(
+def pull_posts(
     builder: PostBuilder,
     config: TelegramConfig,
     limit: int = 100,
@@ -137,7 +137,7 @@ class OutPost:
     upload: Callable
 
 
-def upload_posts(
+def push_posts(
     posts: Sequence[OutPost],
     config: TelegramConfig,
 ) -> None:
