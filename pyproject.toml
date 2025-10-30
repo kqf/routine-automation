@@ -51,6 +51,7 @@ dependencies = [
     "ffmpeg-python",
     "dataclasses-json",
     "environs",
+    "yt-dlp",
 ]
 
 [project.scripts]
