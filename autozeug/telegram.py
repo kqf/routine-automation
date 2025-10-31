@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Sequence
+from typing import Protocol, Sequence
 
 from dataclasses_json import dataclass_json
 from environs import env
@@ -131,10 +131,9 @@ def pull_posts(
     return asyncio.run(main())
 
 
-@dataclass
-class OutPost:
-    valid: Callable
-    upload: Callable
+class OutPost(Protocol):
+    def valid(self) -> bool: ...
+    async def upload(self, client, entity) -> None: ...
 
 
 def push_posts(
