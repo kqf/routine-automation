@@ -14,12 +14,18 @@ from autozeug.video import download_from_youtube, video_exists_and_valid
 
 
 @dataclass
-class OutPost:
+class VideoPost:
     youid: str
     date: str
     text: str
     link: str
     video: Path
+
+    def valid(self) -> bool:
+        return True
+
+    async def upload(self, client, entity):
+        pass
 
 
 def find_youtube_links(text: str) -> list[str]:
@@ -41,14 +47,14 @@ def extrac_youtube_id(url: str) -> str:
     return url
 
 
-def extract_posts(posts: list[Post], course: Path) -> dict[str, OutPost]:
-    outposts: dict[str, OutPost] = {}
+def extract_posts(posts: list[Post], course: Path) -> dict[str, VideoPost]:
+    outposts: dict[str, VideoPost] = {}
     for post in posts:
         for link in find_youtube_links(post.text):
             youid = extrac_youtube_id(link)
             if youid in outposts:
                 continue
-            outposts[youid] = OutPost(
+            outposts[youid] = VideoPost(
                 youid=youid,
                 date=post.date,
                 text=post.text,
@@ -58,7 +64,7 @@ def extract_posts(posts: list[Post], course: Path) -> dict[str, OutPost]:
     return outposts
 
 
-def dowload_videos(posts: dict[str, OutPost]):
+def dowload_videos(posts: dict[str, VideoPost]):
     for post in posts.values():
         if not video_exists_and_valid(post.video):
             download_from_youtube(post.video, post.link)
@@ -70,7 +76,7 @@ def main():
     original = load_posts(cachefile)
     posts = extract_posts(original, cachefile.with_suffix(""))
     dowload_videos(posts)
-    push_posts(posts.values(), config=config)
+    push_posts(list(posts.values()), config=config)
 
 
 if __name__ == "__main__":
