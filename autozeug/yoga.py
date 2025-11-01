@@ -9,6 +9,7 @@ from autozeug.telegram import (
     load_posts,
     pull_posts,
     push_posts,
+    upload_video,
 )
 from autozeug.video import download_from_youtube, video_exists_and_valid
 
@@ -25,7 +26,12 @@ class VideoPost:
         return True
 
     async def upload(self, client, entity):
-        pass
+        return await upload_video(
+            client,
+            entity,
+            media=self.video,
+            caption=self.text,
+        )
 
 
 def find_youtube_links(text: str) -> list[str]:
