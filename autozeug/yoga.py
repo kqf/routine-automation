@@ -23,7 +23,7 @@ class VideoPost:
     video: Path
 
     def valid(self) -> bool:
-        return True
+        return self.video.exists()
 
     async def upload(self, client, entity):
         return await upload_video(
