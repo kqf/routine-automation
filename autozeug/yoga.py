@@ -7,8 +7,8 @@ from autozeug.telegram import (
     PostBuilder,
     load_config,
     load_posts,
-    pull_posts,
-    push_posts,
+    pull,
+    push,
     upload_video,
 )
 from autozeug.video import download_from_youtube, video_exists_and_valid
@@ -78,11 +78,11 @@ def dowload_videos(posts: dict[str, VideoPost]):
 
 def main():
     config = load_config()
-    cachefile = pull_posts(builder=PostBuilder(), config=config)
+    cachefile = pull(builder=PostBuilder(), config=config)
     original = load_posts(cachefile)
     posts = extract_posts(original, cachefile.with_suffix(""))
     dowload_videos(posts)
-    push_posts(list(posts.values()), config=config)
+    push(list(posts.values()), config=config)
 
 
 if __name__ == "__main__":
