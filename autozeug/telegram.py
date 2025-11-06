@@ -8,7 +8,7 @@ from typing import Protocol, Sequence
 
 from dataclasses_json import dataclass_json
 from environs import env
-from telethon import TelegramClient
+from telethon import TelegramClient as TC
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
@@ -119,9 +119,7 @@ def pull(
 ) -> Path:
     async def main():
         logger.info(f"Fetching messages from {config.channel_name}...")
-        async with TelegramClient(
-            "pull", config.api_id, config.api_hash
-        ) as client:
+        async with TC("pull", config.api_id, config.api_hash) as client:
             entity = await resolve_channel(client, config.channel_name)
             messages = []
 
@@ -151,9 +149,7 @@ def push(
 ) -> None:
     async def main():
         logger.info(f"Uploading messages to {config.out_channel_name}...")
-        async with TelegramClient(
-            "push", config.api_id, config.api_hash
-        ) as client:
+        async with TC("push", config.api_id, config.api_hash) as client:
             entity = await resolve_channel(client, config.out_channel_name)
             for post in posts:
                 if not post.valid():
@@ -163,8 +159,6 @@ def push(
                     await post.upload(client, entity)
                     logger.info(f"Uploaded: {post}")
                 except Exception as e:
-                    logger.error(
-                        f"Failed to upload {post}: {e}", exc_info=True
-                    )
+                    logger.error(f"Push failed {post}: {e}", exc_info=True)
 
     asyncio.run(main())
