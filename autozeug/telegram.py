@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +12,12 @@ from telethon import TelegramClient
 from telethon.tl.types import DocumentAttributeVideo
 
 from autozeug.video import extract_metadata
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 async def resolve_channel(client, title: str):
@@ -111,8 +118,10 @@ def pull(
     limit: int = 100,
 ) -> Path:
     async def main():
-        with TelegramClient("pull", config.api_id, config.api_hash) as client:
-            print(f"Fetching messages from {config.channel_name}...")
+        logger.info(f"Fetching messages from {config.channel_name}...")
+        async with TelegramClient(
+            "pull", config.api_id, config.api_hash
+        ) as client:
             entity = await resolve_channel(client, config.channel_name)
             messages = []
 
@@ -125,7 +134,7 @@ def pull(
             messages = messages[::-1]
             ofile = builder.ofile(messages)
             save_posts(ofile, messages)
-            print(f"✅ Saved {len(messages)} text posts to '{ofile}'")
+            logger.info(f"Saved {len(messages)} text posts to '{ofile}'")
         return ofile
 
     return asyncio.run(main())
@@ -141,8 +150,10 @@ def push(
     config: TelegramConfig,
 ) -> None:
     async def main():
-        with TelegramClient("push", config.api_id, config.api_hash) as client:
-            print(f"Uploading messages to {config.out_channel_name}...")
+        logger.info(f"Uploading messages to {config.out_channel_name}...")
+        async with TelegramClient(
+            "push", config.api_id, config.api_hash
+        ) as client:
             entity = await resolve_channel(client, config.out_channel_name)
             for post in posts:
                 if not post.valid():
@@ -150,8 +161,10 @@ def push(
 
                 try:
                     await post.upload(client, entity)
-                    print(f"✅ Uploaded: {post}")
+                    logger.info(f"Uploaded: {post}")
                 except Exception as e:
-                    print(f"❌ Failed to upload {post}: {e}")
+                    logger.error(
+                        f"Failed to upload {post}: {e}", exc_info=True
+                    )
 
     asyncio.run(main())
