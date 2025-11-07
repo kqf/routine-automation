@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
@@ -9,7 +10,14 @@ def _to_stream(probe):
     return next(s for s in probe["streams"] if s["codec_type"] == "video")
 
 
-def extract_metadata(video: Path):
+@dataclass
+class VideoMetadata:
+    width: int
+    height: int
+    duration: float
+
+
+def extract_metadata(video: Path) -> VideoMetadata:
     probe = ffmpeg.probe(video)
     video_stream = _to_stream(probe)
 
@@ -17,7 +25,7 @@ def extract_metadata(video: Path):
     height = video_stream["height"]
     # Duration is often in seconds as a string, e.g., '123.456'
     duration = float(probe["format"]["duration"])
-    return width, height, duration
+    return VideoMetadata(width, height, duration)
 
 
 def is_readable(video):
