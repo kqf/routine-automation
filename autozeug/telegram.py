@@ -29,10 +29,9 @@ async def resolve_channel(client, title: str):
 
 
 def video_attributes(media: Path) -> dict:
-    if media.suffix.lower() != ".mp4":
+    if not (metadata := extract_metadata(media)):
         return {}
 
-    metadata = extract_metadata(media)
     return {
         "attributes": [
             DocumentAttributeVideo(
