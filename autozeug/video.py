@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import cv2
 import ffmpeg
@@ -17,7 +18,9 @@ class VideoMetadata:
     duration: float
 
 
-def extract_metadata(video: Path) -> VideoMetadata:
+def extract_metadata(video: Path) -> Optional[VideoMetadata]:
+    if video.suffix.lower() != ".mp4":
+        return None
     probe = ffmpeg.probe(video)
     video_stream = _to_stream(probe)
 
