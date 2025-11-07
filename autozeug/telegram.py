@@ -32,13 +32,13 @@ def video_attributes(media: Path) -> dict:
     if media.suffix.lower() != ".mp4":
         return {}
 
-    width, height, duration = extract_metadata(media)
+    metadata = extract_metadata(media)
     return {
         "attributes": [
             DocumentAttributeVideo(
-                duration=duration,
-                w=width,
-                h=height,
+                duration=metadata.duration,
+                w=metadata.width,
+                h=metadata.height,
                 supports_streaming=True,
             )
         ]
