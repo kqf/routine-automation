@@ -2,6 +2,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+import click
+
 from autozeug.telegram import (
     Post,
     PostBuilder,
@@ -76,12 +78,18 @@ def dowload_videos(posts: dict[str, VideoPost]):
             download_from_youtube(post.video, post.link)
 
 
-def main():
+@click.command()
+@click.option("--dry-run/--no-dry-run", default=True, help="Do not push")
+def main(dry_run: bool):
     config = load_config()
     cachefile = pull(builder=PostBuilder(), config=config)
     original = load_posts(cachefile)
     posts = extract_posts(original, cachefile.with_suffix(""))
     dowload_videos(posts)
+
+    if dry_run:
+        click.echo(f"Dry run: prepared {len(posts)} posts; no push performed")
+        return
     push(list(posts.values()), config=config)
 
 
