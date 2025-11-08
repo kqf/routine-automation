@@ -89,8 +89,11 @@ def main(dry_run: bool):
 
     if dry_run:
         click.echo(f"Dry run: prepared {len(posts)} posts; no push performed")
+        for post in posts:
+            click.echo(f"{post}")
         return
     push(list(posts.values()), config=config)
+    click.echo("Done.")
 
 
 if __name__ == "__main__":
