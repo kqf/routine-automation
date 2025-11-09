@@ -25,7 +25,7 @@ class VideoPost:
     video: Path
 
     def __str__(self):
-        return f"{self.date}: {self.video}"
+        return f"{self.date}: {self.video} \n {self.text}"
 
     def valid(self) -> bool:
         return self.video.exists()
