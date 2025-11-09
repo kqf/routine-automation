@@ -24,6 +24,9 @@ class VideoPost:
     link: str
     video: Path
 
+    def __str__(self):
+        return f"{self.date}: {self.video}"
+
     def valid(self) -> bool:
         return self.video.exists()
 
