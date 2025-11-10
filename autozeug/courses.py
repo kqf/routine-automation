@@ -5,7 +5,7 @@ from typing import Callable, List, Optional
 
 import click
 
-from autozeug.telegram import load_config, push
+from autozeug.telegram import load_config, push, upload_video
 
 
 def clean_caption(text: str) -> str:
@@ -16,6 +16,17 @@ def clean_caption(text: str) -> str:
     # Strip leading/trailing whitespace on each line
     text = "\n".join(line.strip() for line in text.splitlines())
     return text
+
+
+def fix_caps(caption, max_caption=1024):
+    # If caption is short enough, return as is
+    if len(caption) <= max_caption:
+        return caption, ""
+
+    extracted = "\n".join(
+        line for line in caption.splitlines() if line.startswith("**")
+    )
+    return extracted, caption
 
 
 @dataclass
@@ -42,6 +53,19 @@ class MediaPost:
             "caption": self.caption,
             "media": str(self.media) if self.media else None,
         }
+
+    def valid(self) -> bool:
+        return True
+
+    async def upload(self, client, entity):
+        if self.media is None:
+            return await client.send_message(entity, self.caption)
+
+        cap, caption_extra = fix_caps(self.caption or self.name)
+        msg = await upload_video(client, entity, self.media, cap)
+        if caption_extra:
+            await client.send_message(entity, caption_extra)
+        return msg
 
 
 def nsort(s: str):
@@ -89,12 +113,10 @@ def process_folder(
         [f for f in folder.iterdir() if f.is_file() and not is_ignore(f)],
     )
     if media_files := [f for f in files if is_media(f)]:
-        captions = [f for f in files if is_text(f)]
+        cps = [f for f in files if is_text(f)]
         return [
             MediaPost(
-                caption=captions[0].read_text(encoding="utf-8")
-                if captions
-                else "",
+                caption=cps[0].read_text(encoding="utf-8") if cps else "",
                 name=folder.stem,
                 full_name=f"{prefix} / {mf.stem}",
                 media=mf,
@@ -140,7 +162,7 @@ def main(directory: Path, dry_run: bool):
     config = load_config()
     posts = prepare_posts(directory)
     push(
-        posts,  # type: ignore
+        posts,
         config,
         # dry_run=dry_run, # noqa
     )
