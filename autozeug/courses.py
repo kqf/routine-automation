@@ -164,7 +164,7 @@ def main(directory: Path, dry_run: bool):
     push(
         posts,
         config,
-        # dry_run=dry_run, # noqa
+        dry_run=dry_run,
     )
 
 
