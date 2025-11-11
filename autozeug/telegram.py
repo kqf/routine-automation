@@ -145,6 +145,7 @@ class OutPost(Protocol):
 def push(
     posts: Sequence[OutPost],
     config: TelegramConfig,
+    dry_run: bool = False,
 ) -> None:
     async def main():
         logger.info(f"Uploading messages to {config.out_channel_name}...")
@@ -152,6 +153,10 @@ def push(
             entity = await resolve_channel(client, config.out_channel_name)
             for post in posts:
                 if not post.valid():
+                    continue
+
+                if dry_run:
+                    logger.info(f"Would upload {post}")
                     continue
 
                 try:
