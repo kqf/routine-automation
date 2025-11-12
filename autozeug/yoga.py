@@ -89,13 +89,7 @@ def main(dry_run: bool):
     original = load_posts(cachefile)
     posts = extract_posts(original, cachefile.with_suffix(""))
     dowload_videos(posts)
-
-    if dry_run:
-        click.echo(f"Dry run: prepared {len(posts)} posts; no push performed")
-        for post in posts:
-            click.echo(f"{post}")
-        return
-    push(list(posts.values()), config=config)
+    push(list(posts.values()), config=config, dry_run=dry_run)
     click.echo("Done.")
 
 
