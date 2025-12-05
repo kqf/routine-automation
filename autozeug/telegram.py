@@ -71,8 +71,8 @@ def load_config() -> TelegramConfig:
     )
 
 
-@dataclass
 @dataclass_json
+@dataclass
 class Post:
     date: str
     text: str
@@ -96,7 +96,7 @@ def load_posts(filename: Path) -> list[Post]:
 
 class PostBuilder:
     def valid(self, message) -> bool:
-        return "youtube" in message.message
+        return message.message and "youtube" in message.message
 
     def build(self, message) -> Post:
         return Post(
