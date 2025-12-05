@@ -82,7 +82,7 @@ def dowload_videos(posts: dict[str, VideoPost]):
 
 
 @click.command()
-@click.option("--dry-run/--no-dry-run", default=True, help="Do not push")
+@click.option("--dry-run/--no-dry-run", default=False, help="Do not push")
 def main(dry_run: bool):
     config = load_config()
     cachefile = pull(builder=PostBuilder(), config=config)
